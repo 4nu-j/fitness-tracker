@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Workout Analyzer</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+</head>
+<body>
+  <!-- SPLASH / LANDING -->
+  <div id="splash" class="screen active">
+    <div class="splash-bg"></div>
+    <div class="splash-content">
+      <div class="logo-block">
+        <span class="logo-icon">⚡</span>
+        <h1 class="logo-text">FORM<span>AI</span></h1>
+        <p class="logo-sub">AI-Powered Workout Analyzer</p>
+      </div>
+      <div class="feature-pills">
+        <span>📷 Live Camera</span>
+        <span>🦴 Pose Detection</span>
+        <span>🔁 Rep Counter</span>
+        <span>📊 Form Score</span>
+        <span>🔥 Calorie Tracker</span>
+      </div>
+      <button class="btn-primary" onclick="App.goTo('dashboard')">Start Training →</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="screen">
+    <nav class="topbar">
+      <div class="brand">⚡ FORMAI</div>
+      <div class="nav-links">
+        <button onclick="App.goTo('dashboard')" class="active">Dashboard</button>
+        <button onclick="App.goTo('workout')">Workout</button>
+        <button onclick="App.goTo('history')">History</button>
+        <button onclick="App.goTo('analytics')">Analytics</button>
+      </div>
+    </nav>
+
+    <main class="dashboard-main">
+      <div class="dash-header">
+        <div>
+          <h2 class="greeting" id="greeting">Good Morning 💪</h2>
+          <p class="dash-sub">Ready to crush today's session?</p>
+        </div>
+        <div class="streak-badge">
+          <span class="streak-num" id="streakCount">0</span>
+          <span class="streak-label">Day Streak 🔥</span>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stats-grid">
+        <div class="stat-card glass">
+          <div class="stat-icon">🏋️</div>
+          <div class="stat-val" id="totalWorkouts">0</div>
+          <div class="stat-lbl">Total Workouts</div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon">🔁</div>
+          <div class="stat-val" id="totalReps">0</div>
+          <div class="stat-lbl">Total Reps</div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-val" id="totalCalories">0</div>
+          <div class="stat-lbl">Calories Burned</div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-val" id="totalTime">0m</div>
+          <div class="stat-lbl">Total Time</div>
+        </div>
+      </div>
+
+      <!-- Exercise Selection -->
+      <section class="exercise-section">
+        <h3 class="section-title">Choose Your Exercise</h3>
+        <div class="exercise-grid" id="exerciseGrid"></div>
+      </section>
+
+      <!-- Weekly Chart -->
+      <section class="chart-section glass">
+        <h3 class="section-title">This Week</h3>
+        <canvas id="weeklyChart"></canvas>
+      </section>
+    </main>
+  </div>
+
+  <!-- WORKOUT / CAMERA SCREEN -->
+  <div id="workout" class="screen">
+    <nav class="topbar">
+      <button class="back-btn" onclick="App.exitWorkout()">← Back</button>
+      <div class="brand" id="workoutExerciseName">WORKOUT</div>
+      <button class="btn-sm" onclick="App.toggleCamera()">📷 Camera</button>
+    </nav>
+
+    <div class="workout-layout">
+      <!-- Camera Panel -->
+      <div class="camera-panel">
+        <div class="camera-container" id="cameraContainer">
+          <video id="webcam" autoplay muted playsinline></video>
+          <canvas id="poseCanvas"></canvas>
+          <div class="camera-overlay" id="cameraOverlay">
+            <div class="overlay-icon">📷</div>
+            <p>Click to enable camera for pose detection</p>
+            <button class="btn-primary sm" onclick="App.startCamera()">Enable Camera</button>
+          </div>
+          <div class="pose-status" id="poseStatus">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Initializing...</span>
+          </div>
+          <div class="form-score-overlay" id="formScoreOverlay">
+            <div class="form-ring" id="formRing">
+              <span id="formScoreVal">--</span>
+            </div>
+            <span class="form-label">Form Score</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Control Panel -->
+      <div class="control-panel">
+        <!-- Rep Counter -->
+        <div class="rep-counter glass">
+          <div class="rep-display">
+            <span class="rep-num" id="repCount">0</span>
+            <span class="rep-label">REPS</span>
+          </div>
+          <div class="set-info">
+            <span>Set <span id="currentSet">1</span> / <span id="totalSets">3</span></span>
+          </div>
+          <div class="rep-progress-bar">
+            <div class="rep-progress-fill" id="repProgressFill"></div>
+          </div>
+        </div>
+
+        <!-- Live Feedback -->
+        <div class="feedback-panel glass">
+          <h4>Live Feedback</h4>
+          <div id="feedbackList" class="feedback-list">
+            <div class="feedback-item info">🤖 Load an exercise and enable camera to start.</div>
+          </div>
+        </div>
+
+        <!-- Angles Display -->
+        <div class="angles-panel glass">
+          <h4>Joint Angles</h4>
+          <div class="angles-grid" id="anglesGrid">
+            <div class="angle-item"><span class="angle-label">Left Elbow</span><span class="angle-val" id="angleLeftElbow">--°</span></div>
+            <div class="angle-item"><span class="angle-label">Right Elbow</span><span class="angle-val" id="angleRightElbow">--°</span></div>
+            <div class="angle-item"><span class="angle-label">Left Knee</span><span class="angle-val" id="angleLeftKnee">--°</span></div>
+            <div class="angle-item"><span class="angle-label">Right Knee</span><span class="angle-val" id="angleRightKnee">--°</span></div>
+            <div class="angle-item"><span class="angle-label">Left Hip</span><span class="angle-val" id="angleLeftHip">--°</span></div>
+            <div class="angle-item"><span class="angle-label">Right Hip</span><span class="angle-val" id="angleRightHip">--°</span></div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="workout-controls">
+          <button class="btn-danger" onclick="App.resetSet()">Reset Set</button>
+          <button class="btn-success" onclick="App.nextSet()">Next Set ✓</button>
+          <button class="btn-primary" onclick="App.finishWorkout()">Finish 🏁</button>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-display glass">
+          <span class="timer-icon">⏱️</span>
+          <span class="timer-val" id="workoutTimer">00:00</span>
+          <span class="calories-live">🔥 <span id="liveCalories">0</span> kcal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY SCREEN -->
+  <div id="history" class="screen">
+    <nav class="topbar">
+      <div class="brand">⚡ FORMAI</div>
+      <div class="nav-links">
+        <button onclick="App.goTo('dashboard')">Dashboard</button>
+        <button onclick="App.goTo('workout')">Workout</button>
+        <button onclick="App.goTo('history')" class="active">History</button>
+        <button onclick="App.goTo('analytics')">Analytics</button>
+      </div>
+    </nav>
+    <main class="history-main">
+      <h2 class="section-title">Workout History</h2>
+      <div id="historyList" class="history-list"></div>
+    </main>
+  </div>
+
+  <!-- ANALYTICS SCREEN -->
+  <div id="analytics" class="screen">
+    <nav class="topbar">
+      <div class="brand">⚡ FORMAI</div>
+      <div class="nav-links">
+        <button onclick="App.goTo('dashboard')">Dashboard</button>
+        <button onclick="App.goTo('workout')">Workout</button>
+        <button onclick="App.goTo('history')">History</button>
+        <button onclick="App.goTo('analytics')" class="active">Analytics</button>
+      </div>
+    </nav>
+    <main class="analytics-main">
+      <h2 class="section-title">Analytics</h2>
+      <div class="analytics-grid">
+        <div class="a-card glass">
+          <h4>Reps Per Exercise</h4>
+          <canvas id="exerciseChart"></canvas>
+        </div>
+        <div class="a-card glass">
+          <h4>Form Score Trend</h4>
+          <canvas id="formTrendChart"></canvas>
+        </div>
+        <div class="a-card glass">
+          <h4>Calories Per Session</h4>
+          <canvas id="calorieChart"></canvas>
+        </div>
+        <div class="a-card glass">
+          <h4>Personal Bests</h4>
+          <div id="pbList" class="pb-list"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Result Modal -->
+  <div id="resultModal" class="modal-overlay hidden">
+    <div class="modal glass">
+      <h2>Session Complete! 🎉</h2>
+      <div class="result-grid" id="resultGrid"></div>
+      <div class="form-feedback-summary" id="formFeedbackSummary"></div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="App.saveAndClose()">Save & Return 🏠</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MediaPipe + Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="js/storage.js"></script>
+  <script src="js/exercises.js"></script>
+  <script src="js/pose.js"></script>
+  <script src="js/analyzer.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
